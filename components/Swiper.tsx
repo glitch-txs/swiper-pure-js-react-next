@@ -12,8 +12,8 @@ const Swiper = () => {
     const transitionTime: string = '0.3s'
 
     const swiperRef = useRef<HTMLDivElement | null>(null)
-
-    const [intervalID, setIntervalID] = useState<NodeJS.Timer>()
+    
+    const intervalIDRef = useRef<NodeJS.Timer | null>(null)
 
     const handleNext = ()=>{
         if(swiperRef.current && swiperRef.current.children.length > 0){
@@ -69,18 +69,61 @@ const Swiper = () => {
     //Automatic Change
     useEffect(()=>{
 
-        if(intervalID){
-            clearInterval(intervalID)
+        if(intervalIDRef.current){
+            clearInterval(intervalIDRef.current)
         }
 
-        const intervalID_ = setInterval(()=>{
+        intervalIDRef.current = setInterval(()=>{
             handleNext()
         }, animationTime)
 
-        setIntervalID(intervalID_)
 
-        console.log('1',swiperRef.current)
-        return ()=> clearInterval(intervalID)
+        //clear interval when hover - OPTIONAL
+        swiperRef.current?.addEventListener('mouseenter', ()=>{
+            if(intervalIDRef.current)
+            clearInterval(intervalIDRef.current)
+        })
+        swiperRef.current?.addEventListener('mouseleave', ()=>{
+            intervalIDRef.current = setInterval(()=>{
+                handleNext()
+            }, animationTime)
+        })
+        //This will stop the animation if the window get blur, to stop the animation when the user is not in the website. (Avoid Bugs).
+        window.addEventListener('blur', ()=>{
+            if(intervalIDRef.current)
+            clearInterval(intervalIDRef.current)
+        })
+        window.addEventListener('focus', ()=>{
+            intervalIDRef.current = setInterval(()=>{
+                handleNext()
+            }, animationTime)
+        })
+    
+        return ()=> {
+            if(intervalIDRef.current){
+                clearInterval(intervalIDRef.current)
+            }
+
+            //Remove clear interval when hover
+            swiperRef.current?.removeEventListener('mouseenter', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            swiperRef.current?.removeEventListener('mouseleave', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+            window.removeEventListener('blur', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            window.removeEventListener('focus', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+        }
 
     },[])
 
