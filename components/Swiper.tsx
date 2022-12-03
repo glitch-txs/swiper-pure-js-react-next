@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import React, { useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import left from '../public/left.svg'
 import right from '../public/right.svg'
 import s from './Swiper.module.css'
@@ -7,14 +7,20 @@ import { data } from './data'
 
 const Swiper = () => {
 
+    const animationTime: number = 3000
+
+    const transitionTime: string = '0.3s'
+
     const swiperRef = useRef<HTMLDivElement | null>(null)
+
+    const [intervalID, setIntervalID] = useState<NodeJS.Timer>()
 
     const handleNext = ()=>{
         if(swiperRef.current && swiperRef.current.children.length > 0){
 
             const firstChild = swiperRef.current.children[0]
 
-            swiperRef.current.style.transition = `all 0.3s ease-out`
+            swiperRef.current.style.transition = `all ${transitionTime} ease-out`
 
             const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
 
@@ -51,13 +57,32 @@ const Swiper = () => {
 
             setTimeout(()=>{
                 if(swiperRef.current){
-                    swiperRef.current.style.transition = `all 0.3s ease-out`
+                    swiperRef.current.style.transition = `all ${transitionTime} ease-out`
                     swiperRef.current.style.transform = `translateX(0px)`
                 }
             },0)
 
         }
     }
+
+
+    //Automatic Change
+    useEffect(()=>{
+
+        if(intervalID){
+            clearInterval(intervalID)
+        }
+
+        const intervalID_ = setInterval(()=>{
+            handleNext()
+        }, animationTime)
+
+        setIntervalID(intervalID_)
+
+        console.log('1',swiperRef.current)
+        return ()=> clearInterval(intervalID)
+
+    },[])
 
   return (
     <div className={s.container} >
