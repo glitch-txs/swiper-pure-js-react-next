@@ -9,14 +9,17 @@
     height: 100%;
     position: relative;
     display: flex;
+    width: max-content;
 
     transition:all 0.3s ease;
     z-index: 10;
 }
 
 .slide{
-    min-width: 1000px;
+    width: 1000px;
     overflow: hidden;
+    pointer-events: none;
+    user-select: none;
 }
 
 .slide img{
