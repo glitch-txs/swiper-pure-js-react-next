@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import left from '../public/left.svg'
 import right from '../public/right.svg'
 import s from './Swiper.module.css'
@@ -88,17 +88,30 @@ const Swiper = () => {
 
     },[])
 
-    // //clear interval when hover - OPTIONAL
+    // // //clear interval when hover - OPTIONAL
     useEffect(()=>{
-        swiperRef.current?.addEventListener('mouseenter', ()=>{
-            if(intervalIDRef.current)
-            clearInterval(intervalIDRef.current)
-        })
-        swiperRef.current?.addEventListener('mouseleave', ()=>{
-            intervalIDRef.current = setInterval(()=>{
-                handleNext()
-            }, animationTime)
-        })
+        if(window.innerWidth < 900){
+            swiperRef.current?.addEventListener('touchstart', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            swiperRef.current?.addEventListener('touchend', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+        } else {
+            swiperRef.current?.addEventListener('mouseenter', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            swiperRef.current?.addEventListener('mouseleave', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+        }
+
 
         //This will stop the animation if the window get blur to stop the animation when the user is not in the website. (Avoids Bugs).
         window.addEventListener('blur', ()=>{
@@ -120,6 +133,15 @@ const Swiper = () => {
                 clearInterval(intervalIDRef.current)
             })
             swiperRef.current?.removeEventListener('mouseleave', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+            swiperRef.current?.removeEventListener('touchstart', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            swiperRef.current?.removeEventListener('touchend', ()=>{
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
@@ -159,7 +181,6 @@ const Swiper = () => {
 
             if (e.type == "touchmove") {
                 posX2 = posX1 - e.touches[0].clientX;
-                posX1 = e.touches[0].clientX;
               } else {
                 posX2 = posX1 - e.clientX;
               }

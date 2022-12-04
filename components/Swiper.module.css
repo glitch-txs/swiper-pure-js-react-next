@@ -70,3 +70,33 @@
 .controlsContainer button:last-child{
     right: 0;
 }
+
+@media (max-width:1100px){
+    .container{
+        position: relative;
+        max-width: 1000px;
+        height: 250px;
+        overflow: hidden;
+    }
+    
+    .slideContainer{
+        height: 100%;
+    
+        position: relative;
+        display: flex;
+        width: max-content;
+    
+        transition:all 0.3s ease;
+        z-index: 10;
+    }
+    
+    .slide{
+        width: 1000px;
+        
+        pointer-events: none;
+        user-select: none;
+    }
+}
+
+/* https://stackoverflow.com/questions/42267189/how-to-get-value-translatex-by-javascript */
+/* https://www.google.com/search?q=how+to+get+value+translate+element+in+javascript&ei=DzGNY7u2OfDc1sQP38CYyAc&ved=0ahUKEwj7-YXPkuH7AhVwrpUCHV8gBnkQ4dUDCA8&uact=5&oq=how+to+get+value+translate+element+in+javascript&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAzIFCAAQogQyBQgAEKIEOgoIABBHENYEELADOggIIRDDBBCgAToKCCEQwwQQChCgAUoECEEYAEoECEYYAFBhWL8SYL8TaAFwAXgAgAFriAG4BpIBAzYuM5gBAKABAcgBCMABAQ&sclient=gws-wiz-serp */
