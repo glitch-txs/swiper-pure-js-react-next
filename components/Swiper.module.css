@@ -1,12 +1,14 @@
 .container{
     position: relative;
     max-width: 1000px;
-    height: 180px;
+    height: 250px;
     overflow: hidden;
 }
 
 .slideContainer{
     height: 100%;
+
+    /* It needs position relative or absolute as we are implementing 'Left' property to move the slides children */
     position: relative;
     display: flex;
     width: max-content;
@@ -17,7 +19,10 @@
 
 .slide{
     width: 1000px;
-    overflow: hidden;
+    
+    /* This will prevent artefacts when dragging the slide,
+     if you need to add a button or something interactive inside a slide
+     you can add 'pointer-events: all' to that particular Class */
     pointer-events: none;
     user-select: none;
 }
