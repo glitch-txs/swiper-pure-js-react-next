@@ -10,6 +10,9 @@ const Swiper = () => {
     const animationTime: number = 3000
     const transitionTime: string = '0.3s'
 
+    //IMPORTANT Number of Slides will generate the width of the slideContainer
+    const numberOfSlides: number = data.length
+
     //The number by which the width of the slide will be divided by to decide where to move when dragging stops.
     const offsetPresition: number = 3
 
@@ -17,23 +20,27 @@ const Swiper = () => {
     const containerRef = useRef<HTMLDivElement | null>(null)
     const intervalIDRef = useRef<NodeJS.Timer | null>(null)
 
+    function getTranslateX(myElement: HTMLDivElement) {
+        const style = window.getComputedStyle(myElement)
+        const matrix = new WebKitCSSMatrix(style.transform)
+        return matrix.m41
+    }
+
     const handleNext = ()=>{
         if(swiperRef.current && swiperRef.current.children.length > 0){
 
-            swiperRef.current.style.left = `0px`
-
             const firstChild = swiperRef.current.children[0]
 
-            swiperRef.current.style.transition = `left ${transitionTime} ease-out`
+            swiperRef.current.style.transition = `all ${transitionTime} ease-out`
 
             const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
 
-            swiperRef.current.style.left = `-${childWidth}px`
+            swiperRef.current.style.transform = `translateX(-${childWidth}px)`
 
             const transition = ()=>{
                 if(swiperRef.current){
                     swiperRef.current.style.transition = `none`
-                    swiperRef.current.style.left = `0px`
+                    swiperRef.current.style.transform = `translateX(0px)`
                     swiperRef.current.appendChild(firstChild)
 
                     swiperRef.current.removeEventListener('transitionend', transition)
@@ -57,12 +64,12 @@ const Swiper = () => {
             swiperRef.current.insertBefore(lastChild, swiperRef.current.firstChild)
 
             swiperRef.current.style.transition = 'none'
-            swiperRef.current.style.left = `-${childWidth}px`
+            swiperRef.current.style.transform = `translateX(-${childWidth}px)`
 
             setTimeout(()=>{
                 if(swiperRef.current){
-                    swiperRef.current.style.transition = `left ${transitionTime} ease-out`
-                    swiperRef.current.style.left = `0px`
+                    swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+                    swiperRef.current.style.transform = `translateX(0px)`
                 }
             },0)
 
@@ -80,10 +87,35 @@ const Swiper = () => {
             handleNext()
         }, animationTime)
     
+        //This will stop the animation if the window get blur to stop the animation when the user is not in the website. (Avoids Bugs).
+        window.addEventListener('blur', ()=>{
+            if(intervalIDRef.current)
+            clearInterval(intervalIDRef.current)
+        })
+        window.addEventListener('focus', ()=>{
+            if(intervalIDRef.current)
+            clearInterval(intervalIDRef.current)
+            intervalIDRef.current = setInterval(()=>{
+                handleNext()
+            }, animationTime)
+        })
+
         return ()=> {
             if(intervalIDRef.current){
                 clearInterval(intervalIDRef.current)
             }
+            
+            window.removeEventListener('blur', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            window.removeEventListener('focus', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
         }
 
     },[])
@@ -111,20 +143,6 @@ const Swiper = () => {
                 }, animationTime)
             })
         }
-
-
-        //This will stop the animation if the window get blur to stop the animation when the user is not in the website. (Avoids Bugs).
-        window.addEventListener('blur', ()=>{
-            if(intervalIDRef.current)
-            clearInterval(intervalIDRef.current)
-        })
-        window.addEventListener('focus', ()=>{
-            if(intervalIDRef.current)
-            clearInterval(intervalIDRef.current)
-            intervalIDRef.current = setInterval(()=>{
-                handleNext()
-            }, animationTime)
-        })
     
         return ()=> {
             //Remove clear interval when hover
@@ -146,17 +164,6 @@ const Swiper = () => {
                     handleNext()
                 }, animationTime)
             })
-            window.removeEventListener('blur', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-            })
-            window.removeEventListener('focus', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-                intervalIDRef.current = setInterval(()=>{
-                    handleNext()
-                }, animationTime)
-            })
         }
     },[])
     
@@ -168,9 +175,8 @@ const Swiper = () => {
         let totalDragged = 0;
 
 
-        if(window.innerWidth < 900 && swiperRef.current && containerRef.current){
+        if(containerRef.current){
             containerRef.current.addEventListener("touchstart", dragStart);
-        } else if(containerRef.current) {
             containerRef.current.addEventListener("mousedown", dragStart);
         }
 
@@ -188,7 +194,7 @@ const Swiper = () => {
               if(totalDragged <= -1 * childWidth && totalDragged >= childWidth){
                 return
               } else {
-                swiperRef.current.style.left = `-${childWidth + posX2}px`;
+                swiperRef.current.style.transform = `translateX(${-posX2 - childWidth}px)`;
               }
               totalDragged += posX2
             }
@@ -197,23 +203,26 @@ const Swiper = () => {
           
         function dragEnd() {
             if(swiperRef.current && containerRef.current){
+
+                const translateOffset = getTranslateX(swiperRef.current)
+
                 const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
-                if (swiperRef.current.offsetLeft + childWidth < -1 * childWidth / offsetPresition && swiperRef.current && swiperRef.current.children.length > 0) {
+                if (translateOffset + childWidth < -1 * childWidth / offsetPresition && swiperRef.current && swiperRef.current.children.length > 0) {
                     //Go to Next slide
 
-                    swiperRef.current.style.left = `-${childWidth}px`
+                    swiperRef.current.style.transform = `translateX(${-childWidth}px)`
             
                     const firstChild = swiperRef.current.children[0]
                     const secondtChild = swiperRef.current.children[1]
             
-                    swiperRef.current.style.transition = `left ${transitionTime} ease-out`
+                    swiperRef.current.style.transition = `all ${transitionTime} ease-out`
             
-                    swiperRef.current.style.left = `-${childWidth * 2}px`
+                    swiperRef.current.style.transform = `translateX(${-childWidth * 2}px)`
             
                     const transition = ()=>{
                         if(swiperRef.current){
                             swiperRef.current.style.transition = `none`
-                            swiperRef.current.style.left = `0px`
+                            swiperRef.current.style.transform = `translateX(0px)`
                             swiperRef.current.appendChild(firstChild)
                             swiperRef.current.appendChild(secondtChild)
             
@@ -223,30 +232,30 @@ const Swiper = () => {
             
                     swiperRef.current.addEventListener('transitionend', transition)
 
-                } else if (swiperRef.current.offsetLeft + childWidth > childWidth / offsetPresition) {
+                } else if (translateOffset + childWidth > childWidth / offsetPresition) {
                     //Go to Prev slide
-                    swiperRef.current.style.transition = `left ${transitionTime} ease-out`
-                    swiperRef.current.style.left = `0px`
+                    swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+                    swiperRef.current.style.transform = `translateX(0px)`
                 } else {
                     //Stay in the current slide
                     const transition = ()=>{
                         if(swiperRef.current){
                             const firstChild = swiperRef.current.children[0]
                             swiperRef.current.style.transition = `none`
-                            swiperRef.current.style.left = `0px`
+                            swiperRef.current.style.transform = `translateX(0px)`
                             swiperRef.current.appendChild(firstChild)
             
                             swiperRef.current.removeEventListener('transitionend', transition)
                         }
                     }
                     //transition won't trigger if distance is 0
-                    if(swiperRef.current.offsetLeft + childWidth == 0){
+                    if(translateOffset + childWidth == 0){
                         const firstChild = swiperRef.current.children[0]
-                        swiperRef.current.style.left = `0px`
+                        swiperRef.current.style.transform = `translateX(0px)`
                         swiperRef.current.appendChild(firstChild)
                     } else {
-                        swiperRef.current.style.transition = `left ${transitionTime} ease-out`
-                        swiperRef.current.style.left = `-${childWidth}px`
+                        swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+                        swiperRef.current.style.transform = `translateX(${-childWidth}px)`
                         swiperRef.current.addEventListener('transitionend', transition)
                     }
                 }
@@ -271,7 +280,7 @@ const Swiper = () => {
                 swiperRef.current.insertBefore(lastChild, swiperRef.current.firstChild)
 
                 swiperRef.current.style.transition = 'none'
-                swiperRef.current.style.left = `-${childWidth}px`
+                swiperRef.current.style.transform = `translateX(${-childWidth}px)`
                 //
 
                 if (e.type == "touchstart") {
@@ -303,7 +312,7 @@ const Swiper = () => {
     <>
         <div className={s.container} ref={containerRef} >
 
-            <div className={s.slideContainer} ref={swiperRef} >
+            <div className={s.slideContainer} ref={swiperRef} style={ { width: `calc(100% * ${numberOfSlides});` } } >
 
                 {data?.map((item, index)=>(
                     <div key={index} className={s.slide}>
