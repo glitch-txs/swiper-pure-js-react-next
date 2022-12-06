@@ -147,6 +147,21 @@ const Swiper = () => {
         }
     }
 
+    //The following functions are provided in case you want to attach them to a div other than the slideContainer using OnMouseEnter/OnMouseLeave
+    const handleMouseEnter = ()=>{
+        if(intervalIDRef.current)
+        clearInterval(intervalIDRef.current)
+    }
+
+    const handleMouseLeave = ()=>{
+        if(intervalIDRef.current)
+        clearInterval(intervalIDRef.current)
+        
+        intervalIDRef.current = setInterval(()=>{
+            handleNext()
+        }, animationTime)
+    }
+
     //Trigger when component is in View
     useEffect(()=>{
         setInView(false)
@@ -168,137 +183,137 @@ const Swiper = () => {
     },[])
 
     //Automatic Change - OPTIONAL
-    // useEffect(()=>{
+    useEffect(()=>{
 
-    //     if(intervalIDRef.current){
-    //         clearInterval(intervalIDRef.current)
-    //     }
+        if(intervalIDRef.current){
+            clearInterval(intervalIDRef.current)
+        }
 
-    //     if(inView){
-    //         intervalIDRef.current = setInterval(()=>{
-    //             handleNext()
-    //         }, animationTime)
+        if(inView){
+            intervalIDRef.current = setInterval(()=>{
+                handleNext()
+            }, animationTime)
         
-    //         //This will stop the animation if the window get blur to stop the animation when the user is not in the website. (Avoids Bugs).
-    //         window.addEventListener('blur', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //         })
-    //         window.addEventListener('focus', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //             intervalIDRef.current = setInterval(()=>{
-    //                 handleNext()
-    //             }, animationTime)
-    //         })
-    //     } else {
-    //         if(intervalIDRef.current){
-    //             clearInterval(intervalIDRef.current)
-    //         }
+            //This will stop the animation if the window get blur to stop the animation when the user is not in the website. (Avoids Bugs).
+            window.addEventListener('blur', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            window.addEventListener('focus', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+        } else {
+            if(intervalIDRef.current){
+                clearInterval(intervalIDRef.current)
+            }
 
-    //         window.removeEventListener('blur', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //         })
-    //         window.removeEventListener('focus', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //             intervalIDRef.current = setInterval(()=>{
-    //                 handleNext()
-    //             }, animationTime)
-    //         })
-    //     }
+            window.removeEventListener('blur', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            window.removeEventListener('focus', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+        }
 
 
-    //     return ()=> {
-    //         if(intervalIDRef.current){
-    //             clearInterval(intervalIDRef.current)
-    //         }
+        return ()=> {
+            if(intervalIDRef.current){
+                clearInterval(intervalIDRef.current)
+            }
             
-    //         window.removeEventListener('blur', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //         })
-    //         window.removeEventListener('focus', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //             intervalIDRef.current = setInterval(()=>{
-    //                 handleNext()
-    //             }, animationTime)
-    //         })
-    //     }
+            window.removeEventListener('blur', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            window.removeEventListener('focus', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+        }
 
-    // },[inView])
+    },[inView])
 
     //Stop automation when hover - OPTIONAL
-    // useEffect(()=>{
+    useEffect(()=>{
 
-    //     if(inView){
-    //         if(window.innerWidth < 900){
-    //             swiperRef.current?.addEventListener('touchstart', ()=>{
-    //                 if(intervalIDRef.current)
-    //                 clearInterval(intervalIDRef.current)
-    //             })
-    //             swiperRef.current?.addEventListener('touchend', ()=>{
-    //                 intervalIDRef.current = setInterval(()=>{
-    //                     handleNext()
-    //                 }, animationTime)
-    //             })
-    //         } else {
-    //             swiperRef.current?.addEventListener('mouseenter', ()=>{
-    //                 if(intervalIDRef.current)
-    //                 clearInterval(intervalIDRef.current)
-    //             })
-    //             swiperRef.current?.addEventListener('mouseleave', ()=>{
-    //                 intervalIDRef.current = setInterval(()=>{
-    //                     handleNext()
-    //                 }, animationTime)
-    //             })
-    //         }
-    //     } else {
-    //         swiperRef.current?.removeEventListener('mouseenter', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //         })
-    //         swiperRef.current?.removeEventListener('mouseleave', ()=>{
-    //             intervalIDRef.current = setInterval(()=>{
-    //                 handleNext()
-    //             }, animationTime)
-    //         })
-    //         swiperRef.current?.removeEventListener('touchstart', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //         })
-    //         swiperRef.current?.removeEventListener('touchend', ()=>{
-    //             intervalIDRef.current = setInterval(()=>{
-    //                 handleNext()
-    //             }, animationTime)
-    //         }) 
-    //     }
+        if(inView){
+            if(window.innerWidth < 900){
+                swiperRef.current?.addEventListener('touchstart', ()=>{
+                    if(intervalIDRef.current)
+                    clearInterval(intervalIDRef.current)
+                })
+                swiperRef.current?.addEventListener('touchend', ()=>{
+                    intervalIDRef.current = setInterval(()=>{
+                        handleNext()
+                    }, animationTime)
+                })
+            } else {
+                swiperRef.current?.addEventListener('mouseenter', ()=>{
+                    if(intervalIDRef.current)
+                    clearInterval(intervalIDRef.current)
+                })
+                swiperRef.current?.addEventListener('mouseleave', ()=>{
+                    intervalIDRef.current = setInterval(()=>{
+                        handleNext()
+                    }, animationTime)
+                })
+            }
+        } else {
+            swiperRef.current?.removeEventListener('mouseenter', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            swiperRef.current?.removeEventListener('mouseleave', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+            swiperRef.current?.removeEventListener('touchstart', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            swiperRef.current?.removeEventListener('touchend', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            }) 
+        }
 
     
-    //     return ()=> {
-    //         //Remove clear interval when hover
-    //         swiperRef.current?.removeEventListener('mouseenter', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //         })
-    //         swiperRef.current?.removeEventListener('mouseleave', ()=>{
-    //             intervalIDRef.current = setInterval(()=>{
-    //                 handleNext()
-    //             }, animationTime)
-    //         })
-    //         swiperRef.current?.removeEventListener('touchstart', ()=>{
-    //             if(intervalIDRef.current)
-    //             clearInterval(intervalIDRef.current)
-    //         })
-    //         swiperRef.current?.removeEventListener('touchend', ()=>{
-    //             intervalIDRef.current = setInterval(()=>{
-    //                 handleNext()
-    //             }, animationTime)
-    //         })
-    //     }
-    // },[inView])
+        return ()=> {
+            //Remove clear interval when hover
+            swiperRef.current?.removeEventListener('mouseenter', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            swiperRef.current?.removeEventListener('mouseleave', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+            swiperRef.current?.removeEventListener('touchstart', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            swiperRef.current?.removeEventListener('touchend', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+        }
+    },[inView])
     
     //Draggable
     useEffect(()=>{
