@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import React, { useEffect, useRef } from 'react'
+import React, { use, useEffect, useRef, useState } from 'react'
 import left from '../public/left.svg'
 import right from '../public/right.svg'
 import s from './Swiper.module.css'
@@ -10,7 +10,7 @@ const Swiper = () => {
     const animationTime: number = 3000
     const transitionTime: string = '0.3s'
 
-    //IMPORTANT Number of Slides will generate the width of the slideContainer
+    //IMPORTANT. Number of Slides will generate the width of the slideContainer
     const numberOfSlides: number = data.length
 
     //The number by which the width of the slide will be divided by to decide where to move when dragging stops.
@@ -19,6 +19,8 @@ const Swiper = () => {
     const swiperRef = useRef<HTMLDivElement | null>(null)
     const containerRef = useRef<HTMLDivElement | null>(null)
     const intervalIDRef = useRef<NodeJS.Timer | null>(null)
+
+    const [inView, setInView] = useState<boolean>(false)
 
     function getTranslateX(myElement: HTMLDivElement) {
         const style = window.getComputedStyle(myElement)
@@ -76,29 +78,64 @@ const Swiper = () => {
         }
     }
 
-    // //Automatic Change
+    //Trigger when component is in View
+    useEffect(()=>{
+        setInView(false)
+        const observer = new IntersectionObserver((entries: IntersectionObserverEntry[])=>{
+            if(entries[0].isIntersecting){
+                setInView(true)
+            } else {
+                return
+            }
+        },{ threshold: 1, })
+
+        if(containerRef.current)
+        observer.observe(containerRef.current)
+
+    },[])
+
+    //Automatic Change - OPTIONAL
     useEffect(()=>{
 
         if(intervalIDRef.current){
             clearInterval(intervalIDRef.current)
         }
 
-        intervalIDRef.current = setInterval(()=>{
-            handleNext()
-        }, animationTime)
-    
-        //This will stop the animation if the window get blur to stop the animation when the user is not in the website. (Avoids Bugs).
-        window.addEventListener('blur', ()=>{
-            if(intervalIDRef.current)
-            clearInterval(intervalIDRef.current)
-        })
-        window.addEventListener('focus', ()=>{
-            if(intervalIDRef.current)
-            clearInterval(intervalIDRef.current)
+        if(inView){
             intervalIDRef.current = setInterval(()=>{
                 handleNext()
             }, animationTime)
-        })
+        
+            //This will stop the animation if the window get blur to stop the animation when the user is not in the website. (Avoids Bugs).
+            window.addEventListener('blur', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            window.addEventListener('focus', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+        } else {
+            if(intervalIDRef.current){
+                clearInterval(intervalIDRef.current)
+            }
+
+            window.removeEventListener('blur', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            window.removeEventListener('focus', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            })
+        }
+
 
         return ()=> {
             if(intervalIDRef.current){
@@ -118,31 +155,54 @@ const Swiper = () => {
             })
         }
 
-    },[])
+    },[inView])
 
-    // // //clear interval when hover - OPTIONAL
+    //Stop automation when hover - OPTIONAL
     useEffect(()=>{
-        if(window.innerWidth < 900){
-            swiperRef.current?.addEventListener('touchstart', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-            })
-            swiperRef.current?.addEventListener('touchend', ()=>{
-                intervalIDRef.current = setInterval(()=>{
-                    handleNext()
-                }, animationTime)
-            })
+
+        if(inView){
+            if(window.innerWidth < 900){
+                swiperRef.current?.addEventListener('touchstart', ()=>{
+                    if(intervalIDRef.current)
+                    clearInterval(intervalIDRef.current)
+                })
+                swiperRef.current?.addEventListener('touchend', ()=>{
+                    intervalIDRef.current = setInterval(()=>{
+                        handleNext()
+                    }, animationTime)
+                })
+            } else {
+                swiperRef.current?.addEventListener('mouseenter', ()=>{
+                    if(intervalIDRef.current)
+                    clearInterval(intervalIDRef.current)
+                })
+                swiperRef.current?.addEventListener('mouseleave', ()=>{
+                    intervalIDRef.current = setInterval(()=>{
+                        handleNext()
+                    }, animationTime)
+                })
+            }
         } else {
-            swiperRef.current?.addEventListener('mouseenter', ()=>{
+            swiperRef.current?.removeEventListener('mouseenter', ()=>{
                 if(intervalIDRef.current)
                 clearInterval(intervalIDRef.current)
             })
-            swiperRef.current?.addEventListener('mouseleave', ()=>{
+            swiperRef.current?.removeEventListener('mouseleave', ()=>{
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
             })
+            swiperRef.current?.removeEventListener('touchstart', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
+            })
+            swiperRef.current?.removeEventListener('touchend', ()=>{
+                intervalIDRef.current = setInterval(()=>{
+                    handleNext()
+                }, animationTime)
+            }) 
         }
+
     
         return ()=> {
             //Remove clear interval when hover
@@ -165,7 +225,7 @@ const Swiper = () => {
                 }, animationTime)
             })
         }
-    },[])
+    },[inView])
     
     //Draggable
     useEffect(()=>{
@@ -175,9 +235,12 @@ const Swiper = () => {
         let totalDragged = 0;
 
 
-        if(containerRef.current){
+        if(containerRef.current && inView){
             containerRef.current.addEventListener("touchstart", dragStart);
             containerRef.current.addEventListener("mousedown", dragStart);
+        } else if (containerRef.current) {
+            containerRef.current.removeEventListener("touchstart", dragStart)
+            containerRef.current.removeEventListener("mousedown", dragStart)
         }
 
         function dragMove(e:any) {
@@ -260,10 +323,10 @@ const Swiper = () => {
                     }
                 }
 
-                swiperRef.current.removeEventListener("touchmove", dragMove)
+                containerRef.current.removeEventListener("touchmove", dragMove)
+                containerRef.current.removeEventListener("mousemove", dragMove)
                 containerRef.current.removeEventListener("touchend", dragEnd)
                 containerRef.current.removeEventListener("mouseup", dragEnd)
-                containerRef.current.removeEventListener("mousemove", dragMove)
             }
         }
 
@@ -286,7 +349,7 @@ const Swiper = () => {
                 if (e.type == "touchstart") {
                   posX1 = e.touches[0].clientX;
 
-                  swiperRef.current.addEventListener("touchmove", dragMove);
+                  containerRef.current.addEventListener("touchmove", dragMove);
                   containerRef.current.addEventListener("touchend", dragEnd);
                 } else {
                   posX1 = e.clientX;
@@ -298,21 +361,23 @@ const Swiper = () => {
         }
 
         return ()=>{
-            if(swiperRef.current && containerRef.current){
-                swiperRef.current.removeEventListener("touchmove", dragMove)
+            if(containerRef.current){
+                containerRef.current.removeEventListener("touchstart", dragStart)
+                containerRef.current.removeEventListener("mousedown", dragStart)
+                containerRef.current.removeEventListener("touchmove", dragMove)
+                containerRef.current.removeEventListener("mousemove", dragMove)
                 containerRef.current.removeEventListener("touchend", dragEnd)
                 containerRef.current.removeEventListener("mouseup", dragEnd)
-                containerRef.current.removeEventListener("mousemove", dragMove)
             }
         }
 
-    },[])
+    },[inView])
 
   return (
     <>
         <div className={s.container} ref={containerRef} >
 
-            <div className={s.slideContainer} ref={swiperRef} style={ { width: `calc(100% * ${numberOfSlides});` } } >
+            <div className={s.slideContainer} ref={swiperRef} style={ { width: `calc(100% * ${numberOfSlides})` } } >
 
                 {data?.map((item, index)=>(
                     <div key={index} className={s.slide}>
