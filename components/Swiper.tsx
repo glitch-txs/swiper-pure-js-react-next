@@ -7,8 +7,9 @@ import { data } from './data'
 
 const Swiper = () => {
 
+    //Both are in ms
     const animationTime: number = 3000
-    const transitionTime: string = '0.3s'
+    const transitionTime: number = 300
 
     //IMPORTANT. Number of Slides will generate the width of the slideContainer
     const numberOfSlides: number = data.length
@@ -19,9 +20,10 @@ const Swiper = () => {
     const swiperRef = useRef<HTMLDivElement | null>(null)
     const containerRef = useRef<HTMLDivElement | null>(null)
     const intervalIDRef = useRef<NodeJS.Timer | null>(null)
+    const currentIndexDRef = useRef<any | null>(null)
+    const transitionEndedRef = useRef<any | null>(null)
 
     const [inView, setInView] = useState<boolean>(false)
-    const [currentIndex, setCurrentIndex] = useState<number>(0)
 
     function getTranslateX(myElement: HTMLDivElement) {
         const style = window.getComputedStyle(myElement)
@@ -30,11 +32,14 @@ const Swiper = () => {
     }
 
     const handleNext = ()=>{
-        if(swiperRef.current && swiperRef.current.children.length > 0){
+
+        if(swiperRef.current && swiperRef.current.children.length > 0 && transitionEndedRef.current){
+
+            transitionEndedRef.current = false
 
             const firstChild = swiperRef.current.children[0]
 
-            swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+            swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
 
             const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
 
@@ -47,20 +52,25 @@ const Swiper = () => {
                     swiperRef.current.appendChild(firstChild)
 
                     swiperRef.current.removeEventListener('transitionend', transition)
+
+                    if(currentIndexDRef.current == numberOfSlides - 1){
+                        currentIndexDRef.current = 0
+                    } else {
+                        currentIndexDRef.current += 1
+                    }
+                    transitionEndedRef.current = true
                 }
             }
 
             swiperRef.current.addEventListener('transitionend', transition)
-            if(currentIndex == swiperRef.current.children.length - 1){
-                setCurrentIndex(0)
-            } else {
-                setCurrentIndex(prev => prev + 1)
-            }
         }
     }
     
     const handlePrev = ()=>{
-        if(swiperRef.current && swiperRef.current.children.length > 0){
+        
+        if(swiperRef.current && swiperRef.current.children.length > 0 && transitionEndedRef.current){
+
+            transitionEndedRef.current = false
 
             const lastChildIndex = swiperRef.current.children.length - 1
             
@@ -75,28 +85,39 @@ const Swiper = () => {
 
             setTimeout(()=>{
                 if(swiperRef.current){
-                    swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+                    swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
                     swiperRef.current.style.transform = `translateX(0px)`
+                    transitionEndedRef.current = true
                 }
             },0)
-            if(currentIndex == 0){
-                setCurrentIndex(swiperRef.current.children.length - 1)
+            if(currentIndexDRef.current == 0){
+                currentIndexDRef.current = swiperRef.current.children.length - 1
             } else {
-                setCurrentIndex(prev => prev - 1)
+                currentIndexDRef.current -= 1
             }
         }
+        
     }
-
+    
     const handleGoTo = (index: number)=>{
-        if(currentIndex == index){
+        if(intervalIDRef.current)
+        clearInterval(intervalIDRef.current)
+
+        if(currentIndexDRef.current == index && transitionEndedRef.current){
+            if(intervalIDRef.current)
+            intervalIDRef.current = setInterval(()=>{
+                handleNext()
+            }, animationTime)
             return
-        }else if(currentIndex < index){
+        }else if(currentIndexDRef.current < index && transitionEndedRef.current){
         //Goes fordward
             if(swiperRef.current && swiperRef.current.children.length > 0){
 
-                const IndexDif = index - currentIndex
+                transitionEndedRef.current = false
 
-                swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+                const IndexDif = index - currentIndexDRef.current
+
+                swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
 
                 const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
 
@@ -112,42 +133,55 @@ const Swiper = () => {
                         }
 
                         swiperRef.current.removeEventListener('transitionend', transition)
+                        currentIndexDRef.current = index
+                        if(intervalIDRef.current)
+                        intervalIDRef.current = setInterval(()=>{
+                            handleNext()
+                        }, animationTime)
+                        transitionEndedRef.current = true
                     }
                 }
 
                 swiperRef.current.addEventListener('transitionend', transition)
-                    setCurrentIndex(index)
             }
-        }else if(currentIndex > index){
+        }else if(currentIndexDRef.current > index && transitionEndedRef.current){
         //Goes backward
-        if(swiperRef.current && swiperRef.current.children.length > 0){
+            if(swiperRef.current && swiperRef.current.children.length > 0){
 
-            const IndexDif = currentIndex - index
+                transitionEndedRef.current = false
 
-            const lastChildIndex = swiperRef.current.children.length - 1
-            
-            const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
-            
-            for(let i = 0; i < IndexDif; i++){
-                const lastChild = swiperRef.current.children[lastChildIndex]
-                swiperRef.current.insertBefore(lastChild, swiperRef.current.firstChild)
-            }
+                const IndexDif = currentIndexDRef.current - index
 
-            swiperRef.current.style.transition = 'none'
-            swiperRef.current.style.transform = `translateX(-${childWidth * IndexDif}px)`
-
-            setTimeout(()=>{
-                if(swiperRef.current){
-                    swiperRef.current.style.transition = `all ${transitionTime} ease-out`
-                    swiperRef.current.style.transform = `translateX(0px)`
+                const lastChildIndex = swiperRef.current.children.length - 1
+                
+                const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
+                
+                for(let i = 0; i < IndexDif; i++){
+                    const lastChild = swiperRef.current.children[lastChildIndex]
+                    swiperRef.current.insertBefore(lastChild, swiperRef.current.firstChild)
                 }
-            },0)
-            setCurrentIndex(index)
+
+                swiperRef.current.style.transition = 'none'
+                swiperRef.current.style.transform = `translateX(-${childWidth * IndexDif}px)`
+
+                setTimeout(()=>{
+                    if(swiperRef.current){
+                        swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
+                        swiperRef.current.style.transform = `translateX(0px)`
+                        transitionEndedRef.current = true
+                        if(intervalIDRef.current)
+                        intervalIDRef.current = setInterval(()=>{
+                            handleNext()
+                        }, animationTime)
+                    }
+                },0)
+                currentIndexDRef.current = index
+            }
         }
-        }
+
     }
 
-    //The following functions are provided in case you want to attach them to a div other than the slideContainer using OnMouseEnter/OnMouseLeave
+    //The following functions are provided in case you want to attach them to a div other than the slideContainer using OnMouseEnter/OnMouseLeave (need testing)
     const handleMouseEnter = ()=>{
         if(intervalIDRef.current)
         clearInterval(intervalIDRef.current)
@@ -164,6 +198,9 @@ const Swiper = () => {
 
     //Trigger when component is in View
     useEffect(()=>{
+        currentIndexDRef.current = 0
+        transitionEndedRef.current = true
+
         setInView(false)
         const observer = new IntersectionObserver((entries: IntersectionObserverEntry[])=>{
             if(entries[0].isIntersecting){
@@ -206,6 +243,7 @@ const Swiper = () => {
                     handleNext()
                 }, animationTime)
             })
+
         } else {
             if(intervalIDRef.current){
                 clearInterval(intervalIDRef.current)
@@ -250,41 +288,41 @@ const Swiper = () => {
 
         if(inView){
             if(window.innerWidth < 900){
-                swiperRef.current?.addEventListener('touchstart', ()=>{
+                containerRef.current?.addEventListener('touchstart', ()=>{
                     if(intervalIDRef.current)
                     clearInterval(intervalIDRef.current)
                 })
-                swiperRef.current?.addEventListener('touchend', ()=>{
+                containerRef.current?.addEventListener('touchend', ()=>{
                     intervalIDRef.current = setInterval(()=>{
                         handleNext()
                     }, animationTime)
                 })
             } else {
-                swiperRef.current?.addEventListener('mouseenter', ()=>{
+                containerRef.current?.addEventListener('mouseenter', ()=>{
                     if(intervalIDRef.current)
                     clearInterval(intervalIDRef.current)
                 })
-                swiperRef.current?.addEventListener('mouseleave', ()=>{
+                containerRef.current?.addEventListener('mouseleave', ()=>{
                     intervalIDRef.current = setInterval(()=>{
                         handleNext()
                     }, animationTime)
                 })
             }
         } else {
-            swiperRef.current?.removeEventListener('mouseenter', ()=>{
+            containerRef.current?.removeEventListener('mouseenter', ()=>{
                 if(intervalIDRef.current)
                 clearInterval(intervalIDRef.current)
             })
-            swiperRef.current?.removeEventListener('mouseleave', ()=>{
+            containerRef.current?.removeEventListener('mouseleave', ()=>{
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
             })
-            swiperRef.current?.removeEventListener('touchstart', ()=>{
+            containerRef.current?.removeEventListener('touchstart', ()=>{
                 if(intervalIDRef.current)
                 clearInterval(intervalIDRef.current)
             })
-            swiperRef.current?.removeEventListener('touchend', ()=>{
+            containerRef.current?.removeEventListener('touchend', ()=>{
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
@@ -294,20 +332,20 @@ const Swiper = () => {
     
         return ()=> {
             //Remove clear interval when hover
-            swiperRef.current?.removeEventListener('mouseenter', ()=>{
+            containerRef.current?.removeEventListener('mouseenter', ()=>{
                 if(intervalIDRef.current)
                 clearInterval(intervalIDRef.current)
             })
-            swiperRef.current?.removeEventListener('mouseleave', ()=>{
+            containerRef.current?.removeEventListener('mouseleave', ()=>{
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
             })
-            swiperRef.current?.removeEventListener('touchstart', ()=>{
+            containerRef.current?.removeEventListener('touchstart', ()=>{
                 if(intervalIDRef.current)
                 clearInterval(intervalIDRef.current)
             })
-            swiperRef.current?.removeEventListener('touchend', ()=>{
+            containerRef.current?.removeEventListener('touchend', ()=>{
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
@@ -352,6 +390,7 @@ const Swiper = () => {
           }
           
         function dragEnd() {
+            transitionEndedRef.current = true
             if(swiperRef.current && containerRef.current){
 
                 const translateOffset = getTranslateX(swiperRef.current)
@@ -365,7 +404,7 @@ const Swiper = () => {
                     const firstChild = swiperRef.current.children[0]
                     const secondtChild = swiperRef.current.children[1]
             
-                    swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+                    swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
             
                     swiperRef.current.style.transform = `translateX(${-childWidth * 2}px)`
             
@@ -381,20 +420,20 @@ const Swiper = () => {
                     }
             
                     swiperRef.current.addEventListener('transitionend', transition)
-                    if(currentIndex == swiperRef.current.children.length - 1){
-                        setCurrentIndex(0)
+                    if(currentIndexDRef.current == swiperRef.current.children.length - 1){
+                        currentIndexDRef.current = 0
                     } else {
-                        setCurrentIndex(prev => prev + 1)
+                        currentIndexDRef.current += 1
                     }
 
                 } else if (translateOffset + childWidth > childWidth / offsetPresition) {
                     //Go to Prev slide
-                    swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+                    swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
                     swiperRef.current.style.transform = `translateX(0px)`
-                    if(currentIndex == 0){
-                        setCurrentIndex(swiperRef.current.children.length - 1)
+                    if(currentIndexDRef.current == 0){
+                        currentIndexDRef.current = swiperRef.current.children.length - 1
                     } else {
-                        setCurrentIndex(prev => prev - 1)
+                        currentIndexDRef.current -= 1
                     }
                 } else {
                     //Stay in the current slide
@@ -414,7 +453,7 @@ const Swiper = () => {
                         swiperRef.current.style.transform = `translateX(0px)`
                         swiperRef.current.appendChild(firstChild)
                     } else {
-                        swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+                        swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
                         swiperRef.current.style.transform = `translateX(${-childWidth}px)`
                         swiperRef.current.addEventListener('transitionend', transition)
                     }
@@ -428,6 +467,7 @@ const Swiper = () => {
         }
 
         function dragStart(e:any) {
+            transitionEndedRef.current = false
             if(containerRef.current && swiperRef.current){
                 swiperRef.current.style.transition = 'none'
 
