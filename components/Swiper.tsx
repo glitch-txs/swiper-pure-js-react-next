@@ -21,6 +21,7 @@ const Swiper = () => {
     const intervalIDRef = useRef<NodeJS.Timer | null>(null)
 
     const [inView, setInView] = useState<boolean>(false)
+    const [currentIndex, setCurrentIndex] = useState<number>(0)
 
     function getTranslateX(myElement: HTMLDivElement) {
         const style = window.getComputedStyle(myElement)
@@ -50,7 +51,11 @@ const Swiper = () => {
             }
 
             swiperRef.current.addEventListener('transitionend', transition)
-
+            if(currentIndex == swiperRef.current.children.length - 1){
+                setCurrentIndex(0)
+            } else {
+                setCurrentIndex(prev => prev + 1)
+            }
         }
     }
     
@@ -74,7 +79,71 @@ const Swiper = () => {
                     swiperRef.current.style.transform = `translateX(0px)`
                 }
             },0)
+            if(currentIndex == 0){
+                setCurrentIndex(swiperRef.current.children.length - 1)
+            } else {
+                setCurrentIndex(prev => prev - 1)
+            }
+        }
+    }
 
+    const handleGoTo = (index: number)=>{
+        if(currentIndex == index){
+            return
+        }else if(currentIndex < index){
+        //Goes fordward
+            if(swiperRef.current && swiperRef.current.children.length > 0){
+
+                const IndexDif = index - currentIndex
+
+                swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+
+                const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
+
+                swiperRef.current.style.transform = `translateX(-${childWidth * (IndexDif)}px)`
+
+                const transition = ()=>{
+                    if(swiperRef.current){
+                        swiperRef.current.style.transition = `none`
+                        swiperRef.current.style.transform = `translateX(0px)`
+                        for(let i = 0; i < IndexDif; i++){
+                            const firstChild = swiperRef.current.children[0]
+                            swiperRef.current.appendChild(firstChild)
+                        }
+
+                        swiperRef.current.removeEventListener('transitionend', transition)
+                    }
+                }
+
+                swiperRef.current.addEventListener('transitionend', transition)
+                    setCurrentIndex(index)
+            }
+        }else if(currentIndex > index){
+        //Goes backward
+        if(swiperRef.current && swiperRef.current.children.length > 0){
+
+            const IndexDif = currentIndex - index
+
+            const lastChildIndex = swiperRef.current.children.length - 1
+            
+            const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
+            
+            for(let i = 0; i < IndexDif; i++){
+                const lastChild = swiperRef.current.children[lastChildIndex]
+                swiperRef.current.insertBefore(lastChild, swiperRef.current.firstChild)
+            }
+
+            swiperRef.current.style.transition = 'none'
+            swiperRef.current.style.transform = `translateX(-${childWidth * IndexDif}px)`
+
+            setTimeout(()=>{
+                if(swiperRef.current){
+                    swiperRef.current.style.transition = `all ${transitionTime} ease-out`
+                    swiperRef.current.style.transform = `translateX(0px)`
+                }
+            },0)
+            setCurrentIndex(index)
+        }
         }
     }
 
@@ -87,145 +156,149 @@ const Swiper = () => {
             } else {
                 return
             }
-        },{ threshold: 1, })
+        },{ threshold: 0.6, })
 
         if(containerRef.current)
         observer.observe(containerRef.current)
 
+        return ()=> {
+            if(containerRef.current)
+            observer.unobserve(containerRef.current)
+        }
     },[])
 
     //Automatic Change - OPTIONAL
-    useEffect(()=>{
+    // useEffect(()=>{
 
-        if(intervalIDRef.current){
-            clearInterval(intervalIDRef.current)
-        }
+    //     if(intervalIDRef.current){
+    //         clearInterval(intervalIDRef.current)
+    //     }
 
-        if(inView){
-            intervalIDRef.current = setInterval(()=>{
-                handleNext()
-            }, animationTime)
+    //     if(inView){
+    //         intervalIDRef.current = setInterval(()=>{
+    //             handleNext()
+    //         }, animationTime)
         
-            //This will stop the animation if the window get blur to stop the animation when the user is not in the website. (Avoids Bugs).
-            window.addEventListener('blur', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-            })
-            window.addEventListener('focus', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-                intervalIDRef.current = setInterval(()=>{
-                    handleNext()
-                }, animationTime)
-            })
-        } else {
-            if(intervalIDRef.current){
-                clearInterval(intervalIDRef.current)
-            }
+    //         //This will stop the animation if the window get blur to stop the animation when the user is not in the website. (Avoids Bugs).
+    //         window.addEventListener('blur', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //         })
+    //         window.addEventListener('focus', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //             intervalIDRef.current = setInterval(()=>{
+    //                 handleNext()
+    //             }, animationTime)
+    //         })
+    //     } else {
+    //         if(intervalIDRef.current){
+    //             clearInterval(intervalIDRef.current)
+    //         }
 
-            window.removeEventListener('blur', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-            })
-            window.removeEventListener('focus', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-                intervalIDRef.current = setInterval(()=>{
-                    handleNext()
-                }, animationTime)
-            })
-        }
+    //         window.removeEventListener('blur', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //         })
+    //         window.removeEventListener('focus', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //             intervalIDRef.current = setInterval(()=>{
+    //                 handleNext()
+    //             }, animationTime)
+    //         })
+    //     }
 
 
-        return ()=> {
-            if(intervalIDRef.current){
-                clearInterval(intervalIDRef.current)
-            }
+    //     return ()=> {
+    //         if(intervalIDRef.current){
+    //             clearInterval(intervalIDRef.current)
+    //         }
             
-            window.removeEventListener('blur', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-            })
-            window.removeEventListener('focus', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-                intervalIDRef.current = setInterval(()=>{
-                    handleNext()
-                }, animationTime)
-            })
-        }
+    //         window.removeEventListener('blur', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //         })
+    //         window.removeEventListener('focus', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //             intervalIDRef.current = setInterval(()=>{
+    //                 handleNext()
+    //             }, animationTime)
+    //         })
+    //     }
 
-    },[inView])
+    // },[inView])
 
     //Stop automation when hover - OPTIONAL
-    useEffect(()=>{
+    // useEffect(()=>{
 
-        if(inView){
-            if(window.innerWidth < 900){
-                swiperRef.current?.addEventListener('touchstart', ()=>{
-                    if(intervalIDRef.current)
-                    clearInterval(intervalIDRef.current)
-                })
-                swiperRef.current?.addEventListener('touchend', ()=>{
-                    intervalIDRef.current = setInterval(()=>{
-                        handleNext()
-                    }, animationTime)
-                })
-            } else {
-                swiperRef.current?.addEventListener('mouseenter', ()=>{
-                    if(intervalIDRef.current)
-                    clearInterval(intervalIDRef.current)
-                })
-                swiperRef.current?.addEventListener('mouseleave', ()=>{
-                    intervalIDRef.current = setInterval(()=>{
-                        handleNext()
-                    }, animationTime)
-                })
-            }
-        } else {
-            swiperRef.current?.removeEventListener('mouseenter', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-            })
-            swiperRef.current?.removeEventListener('mouseleave', ()=>{
-                intervalIDRef.current = setInterval(()=>{
-                    handleNext()
-                }, animationTime)
-            })
-            swiperRef.current?.removeEventListener('touchstart', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-            })
-            swiperRef.current?.removeEventListener('touchend', ()=>{
-                intervalIDRef.current = setInterval(()=>{
-                    handleNext()
-                }, animationTime)
-            }) 
-        }
+    //     if(inView){
+    //         if(window.innerWidth < 900){
+    //             swiperRef.current?.addEventListener('touchstart', ()=>{
+    //                 if(intervalIDRef.current)
+    //                 clearInterval(intervalIDRef.current)
+    //             })
+    //             swiperRef.current?.addEventListener('touchend', ()=>{
+    //                 intervalIDRef.current = setInterval(()=>{
+    //                     handleNext()
+    //                 }, animationTime)
+    //             })
+    //         } else {
+    //             swiperRef.current?.addEventListener('mouseenter', ()=>{
+    //                 if(intervalIDRef.current)
+    //                 clearInterval(intervalIDRef.current)
+    //             })
+    //             swiperRef.current?.addEventListener('mouseleave', ()=>{
+    //                 intervalIDRef.current = setInterval(()=>{
+    //                     handleNext()
+    //                 }, animationTime)
+    //             })
+    //         }
+    //     } else {
+    //         swiperRef.current?.removeEventListener('mouseenter', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //         })
+    //         swiperRef.current?.removeEventListener('mouseleave', ()=>{
+    //             intervalIDRef.current = setInterval(()=>{
+    //                 handleNext()
+    //             }, animationTime)
+    //         })
+    //         swiperRef.current?.removeEventListener('touchstart', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //         })
+    //         swiperRef.current?.removeEventListener('touchend', ()=>{
+    //             intervalIDRef.current = setInterval(()=>{
+    //                 handleNext()
+    //             }, animationTime)
+    //         }) 
+    //     }
 
     
-        return ()=> {
-            //Remove clear interval when hover
-            swiperRef.current?.removeEventListener('mouseenter', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-            })
-            swiperRef.current?.removeEventListener('mouseleave', ()=>{
-                intervalIDRef.current = setInterval(()=>{
-                    handleNext()
-                }, animationTime)
-            })
-            swiperRef.current?.removeEventListener('touchstart', ()=>{
-                if(intervalIDRef.current)
-                clearInterval(intervalIDRef.current)
-            })
-            swiperRef.current?.removeEventListener('touchend', ()=>{
-                intervalIDRef.current = setInterval(()=>{
-                    handleNext()
-                }, animationTime)
-            })
-        }
-    },[inView])
+    //     return ()=> {
+    //         //Remove clear interval when hover
+    //         swiperRef.current?.removeEventListener('mouseenter', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //         })
+    //         swiperRef.current?.removeEventListener('mouseleave', ()=>{
+    //             intervalIDRef.current = setInterval(()=>{
+    //                 handleNext()
+    //             }, animationTime)
+    //         })
+    //         swiperRef.current?.removeEventListener('touchstart', ()=>{
+    //             if(intervalIDRef.current)
+    //             clearInterval(intervalIDRef.current)
+    //         })
+    //         swiperRef.current?.removeEventListener('touchend', ()=>{
+    //             intervalIDRef.current = setInterval(()=>{
+    //                 handleNext()
+    //             }, animationTime)
+    //         })
+    //     }
+    // },[inView])
     
     //Draggable
     useEffect(()=>{
@@ -294,11 +367,21 @@ const Swiper = () => {
                     }
             
                     swiperRef.current.addEventListener('transitionend', transition)
+                    if(currentIndex == swiperRef.current.children.length - 1){
+                        setCurrentIndex(0)
+                    } else {
+                        setCurrentIndex(prev => prev + 1)
+                    }
 
                 } else if (translateOffset + childWidth > childWidth / offsetPresition) {
                     //Go to Prev slide
                     swiperRef.current.style.transition = `all ${transitionTime} ease-out`
                     swiperRef.current.style.transform = `translateX(0px)`
+                    if(currentIndex == 0){
+                        setCurrentIndex(swiperRef.current.children.length - 1)
+                    } else {
+                        setCurrentIndex(prev => prev - 1)
+                    }
                 } else {
                     //Stay in the current slide
                     const transition = ()=>{
@@ -311,7 +394,7 @@ const Swiper = () => {
                             swiperRef.current.removeEventListener('transitionend', transition)
                         }
                     }
-                    //transition won't trigger if distance is 0
+                    //transition doesn't work if distance is 0 so:
                     if(translateOffset + childWidth == 0){
                         const firstChild = swiperRef.current.children[0]
                         swiperRef.current.style.transform = `translateX(0px)`
@@ -401,6 +484,20 @@ const Swiper = () => {
             <button onClick={handleNext}>
                 <Image src={right} alt="" />
             </button>
+        </div>
+        <div className={s.goToContainer}>
+                    <button onClick={()=>handleGoTo(0)}>
+                        Go To 0
+                    </button>
+                    <button onClick={()=>handleGoTo(1)}>
+                        Go To 1
+                    </button>
+                    <button onClick={()=>handleGoTo(2)}>
+                        Go To 2
+                    </button>
+                    <button onClick={()=>handleGoTo(3)}>
+                        Go To 3
+                    </button>
         </div>
     </>
 

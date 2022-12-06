@@ -4,7 +4,6 @@
     width: 100%;
     max-width: 1000px;
     height: 250px;
-    margin: 0 10px;
 
     /* Needed overflow hidden - comment this line to see how the swiper works internaly */
     overflow: hidden;
@@ -87,6 +86,19 @@
     right: 0;
 }
 
+.goToContainer{
+    margin-top: 100px;
+    display: flex;
+    gap: 10px;
+}
+
+.goToContainer button{
+    width: 100px;
+    height: 30px;
+    cursor: pointer;
+    border: none;
+}
+
 @media (max-width:1100px){
     .container{
     }
@@ -95,6 +107,12 @@
     }
     
     .slide{
+    }
+}
+
+@media (max-width:472px){
+    .goToContainer{
+        flex-direction: column;
     }
 }
 
