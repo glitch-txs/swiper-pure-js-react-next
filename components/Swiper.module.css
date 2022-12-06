@@ -5,6 +5,8 @@
     max-width: 1000px;
     height: 250px;
 
+    border: solid 1px red;
+
     /* Needed overflow hidden - comment this line to see how the swiper works internaly */
     overflow: hidden;
 }

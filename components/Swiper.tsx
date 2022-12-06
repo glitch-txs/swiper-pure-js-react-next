@@ -305,8 +305,6 @@ const Swiper = () => {
 
         let posX1: number;
         let posX2: number;
-        let totalDragged = 0;
-
 
         if(containerRef.current && inView){
             containerRef.current.addEventListener("touchstart", dragStart);
@@ -317,7 +315,6 @@ const Swiper = () => {
         }
 
         function dragMove(e:any) {
-
             if(swiperRef.current){
             const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
 
@@ -326,13 +323,15 @@ const Swiper = () => {
               } else {
                 posX2 = posX1 - e.clientX;
               }
+
+              const currentTranslateX = - getTranslateX(swiperRef.current)
             
-              if(totalDragged <= -1 * childWidth && totalDragged >= childWidth){
+              //prevent white space when going to far to the left else will move the slider while dragging
+              if(currentTranslateX <= 0 || currentTranslateX >  childWidth * 2){
                 return
               } else {
                 swiperRef.current.style.transform = `translateX(${-posX2 - childWidth}px)`;
               }
-              totalDragged += posX2
             }
 
           }
