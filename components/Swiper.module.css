@@ -99,22 +99,8 @@
     border: none;
 }
 
-@media (max-width:1100px){
-    .container{
-    }
-    
-    .slideContainer{
-    }
-    
-    .slide{
-    }
-}
-
 @media (max-width:472px){
     .goToContainer{
         flex-direction: column;
     }
 }
-
-/* https://stackoverflow.com/questions/42267189/how-to-get-value-translatex-by-javascript */
-/* https://www.google.com/search?q=how+to+get+value+translate+element+in+javascript&ei=DzGNY7u2OfDc1sQP38CYyAc&ved=0ahUKEwj7-YXPkuH7AhVwrpUCHV8gBnkQ4dUDCA8&uact=5&oq=how+to+get+value+translate+element+in+javascript&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAzIFCAAQogQyBQgAEKIEOgoIABBHENYEELADOggIIRDDBBCgAToKCCEQwwQQChCgAUoECEEYAEoECEYYAFBhWL8SYL8TaAFwAXgAgAFriAG4BpIBAzYuM5gBAKABAcgBCMABAQ&sclient=gws-wiz-serp */
