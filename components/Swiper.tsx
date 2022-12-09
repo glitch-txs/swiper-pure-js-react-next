@@ -11,17 +11,14 @@ const Swiper = () => {
     const animationTime: number = 3000
     const transitionTime: number = 300
 
-    //IMPORTANT. Number of Slides will generate the width of the slideContainer
-    const numberOfSlides: number = data.length
-
     //The number by which the width of the slide will be divided by to decide where to move when dragging stops.
     const offsetPresition: number = 3
 
     const swiperRef = useRef<HTMLDivElement | null>(null)
     const containerRef = useRef<HTMLDivElement | null>(null)
     const intervalIDRef = useRef<NodeJS.Timer | null>(null)
-    const currentIndexDRef = useRef<any | null>(null)
-    const transitionEndedRef = useRef<any | null>(null)
+    const currentIndexDRef = useRef<number>(0)
+    const transitionEndedRef = useRef<boolean>(true)
 
     const [inView, setInView] = useState<boolean>(false)
 
@@ -53,7 +50,7 @@ const Swiper = () => {
 
                     swiperRef.current.removeEventListener('transitionend', transition)
 
-                    if(currentIndexDRef.current == numberOfSlides - 1){
+                    if(currentIndexDRef.current == swiperRef.current.children.length - 1){
                         currentIndexDRef.current = 0
                     } else {
                         currentIndexDRef.current += 1
@@ -87,9 +84,18 @@ const Swiper = () => {
                 if(swiperRef.current){
                     swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
                     swiperRef.current.style.transform = `translateX(0px)`
-                    transitionEndedRef.current = true
                 }
             },0)
+
+            const transition = ()=>{
+                if(swiperRef.current){
+                    transitionEndedRef.current = true
+                    swiperRef.current.removeEventListener('transitionend', transition)
+                }
+            }
+
+            swiperRef.current.addEventListener('transitionend', transition)
+
             if(currentIndexDRef.current == 0){
                 currentIndexDRef.current = swiperRef.current.children.length - 1
             } else {
@@ -198,8 +204,6 @@ const Swiper = () => {
 
     //Trigger when component is in View
     useEffect(()=>{
-        currentIndexDRef.current = 0
-        transitionEndedRef.current = true
 
         setInView(false)
         const observer = new IntersectionObserver((entries: IntersectionObserverEntry[])=>{
@@ -293,6 +297,8 @@ const Swiper = () => {
                     clearInterval(intervalIDRef.current)
                 })
                 containerRef.current?.addEventListener('touchend', ()=>{
+                    if(intervalIDRef.current)
+                    clearInterval(intervalIDRef.current)
                     intervalIDRef.current = setInterval(()=>{
                         handleNext()
                     }, animationTime)
@@ -303,6 +309,8 @@ const Swiper = () => {
                     clearInterval(intervalIDRef.current)
                 })
                 containerRef.current?.addEventListener('mouseleave', ()=>{
+                    if(intervalIDRef.current)
+                    clearInterval(intervalIDRef.current)
                     intervalIDRef.current = setInterval(()=>{
                         handleNext()
                     }, animationTime)
@@ -314,6 +322,8 @@ const Swiper = () => {
                 clearInterval(intervalIDRef.current)
             })
             containerRef.current?.removeEventListener('mouseleave', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
@@ -323,6 +333,8 @@ const Swiper = () => {
                 clearInterval(intervalIDRef.current)
             })
             containerRef.current?.removeEventListener('touchend', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
@@ -337,6 +349,8 @@ const Swiper = () => {
                 clearInterval(intervalIDRef.current)
             })
             containerRef.current?.removeEventListener('mouseleave', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
@@ -346,6 +360,8 @@ const Swiper = () => {
                 clearInterval(intervalIDRef.current)
             })
             containerRef.current?.removeEventListener('touchend', ()=>{
+                if(intervalIDRef.current)
+                clearInterval(intervalIDRef.current)
                 intervalIDRef.current = setInterval(()=>{
                     handleNext()
                 }, animationTime)
@@ -368,7 +384,8 @@ const Swiper = () => {
         }
 
         function dragMove(e:any) {
-            if(swiperRef.current){
+            if(swiperRef.current && containerRef.current){
+                containerRef.current.addEventListener('mouseleave', dragEnd)
             const childWidth = (swiperRef.current.children[0] as HTMLElement).offsetWidth
 
             if (e.type == "touchmove") {
@@ -390,7 +407,6 @@ const Swiper = () => {
           }
           
         function dragEnd() {
-            transitionEndedRef.current = true
             if(swiperRef.current && containerRef.current){
 
                 const translateOffset = getTranslateX(swiperRef.current)
@@ -414,7 +430,8 @@ const Swiper = () => {
                             swiperRef.current.style.transform = `translateX(0px)`
                             swiperRef.current.appendChild(firstChild)
                             swiperRef.current.appendChild(secondtChild)
-            
+
+                            transitionEndedRef.current = true
                             swiperRef.current.removeEventListener('transitionend', transition)
                         }
                     }
@@ -430,6 +447,14 @@ const Swiper = () => {
                     //Go to Prev slide
                     swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
                     swiperRef.current.style.transform = `translateX(0px)`
+                    const transition = ()=>{
+                        if(swiperRef.current){
+                            transitionEndedRef.current = true
+                            swiperRef.current.removeEventListener('transitionend', transition)
+                        }
+                    }
+            
+                    swiperRef.current.addEventListener('transitionend', transition)
                     if(currentIndexDRef.current == 0){
                         currentIndexDRef.current = swiperRef.current.children.length - 1
                     } else {
@@ -444,6 +469,7 @@ const Swiper = () => {
                             swiperRef.current.style.transform = `translateX(0px)`
                             swiperRef.current.appendChild(firstChild)
             
+                            transitionEndedRef.current = true
                             swiperRef.current.removeEventListener('transitionend', transition)
                         }
                     }
@@ -452,12 +478,14 @@ const Swiper = () => {
                         const firstChild = swiperRef.current.children[0]
                         swiperRef.current.style.transform = `translateX(0px)`
                         swiperRef.current.appendChild(firstChild)
+                        transitionEndedRef.current = true
                     } else {
                         swiperRef.current.style.transition = `all ${transitionTime}ms ease-out`
                         swiperRef.current.style.transform = `translateX(${-childWidth}px)`
                         swiperRef.current.addEventListener('transitionend', transition)
                     }
                 }
+                containerRef.current.removeEventListener('mouseleave', dragEnd)
 
                 containerRef.current.removeEventListener("touchmove", dragMove)
                 containerRef.current.removeEventListener("mousemove", dragMove)
@@ -467,8 +495,8 @@ const Swiper = () => {
         }
 
         function dragStart(e:any) {
-            transitionEndedRef.current = false
-            if(containerRef.current && swiperRef.current){
+            if(containerRef.current && swiperRef.current && transitionEndedRef.current){
+                transitionEndedRef.current = false
                 swiperRef.current.style.transition = 'none'
 
                 //Add prev image in case is dragedd to left
@@ -514,7 +542,7 @@ const Swiper = () => {
     <>
         <div className={s.container} ref={containerRef} >
 
-            <div className={s.slideContainer} ref={swiperRef} style={ { width: `calc(100% * ${numberOfSlides})` } } >
+            <div className={s.slideContainer} ref={swiperRef} >
 
                 {data?.map((item, index)=>(
                     <div key={index} className={s.slide}>

@@ -13,10 +13,10 @@
     /* Display flex will align the slides elements in one row */
     display: flex;
 
-    /* Width is calculated in the tsx file, it multiplies 100% * the number of slider elements inside the container,
-    this way THIS container will take the width of the sum of all children elements */
-
-    /* DO NOT USE Width HERE */
+    /* Width is calculated multiplying the full width of the parent container by the number of slider elements inside the swiper,
+    this way THIS container will take the width of the sum of all children elements. Width: calc(100% * numberOfCards) */
+    /* Here the number for is because I'm using 4 cards */
+    width: calc(100% * 4);
 
     height: 100%;
 
